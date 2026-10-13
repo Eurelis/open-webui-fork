@@ -1008,6 +1008,18 @@ class OAuthClientManager:
                 ) as resp:
                     if resp.status < 400:
                         return True
+
+                    # EURELIS: Canva MCP (2026-10-13), branche fix/oauth-preflight-bot-challenge ;
+                    # retirer quand l'amont l'a intégré
+                    # A bot-protection challenge (e.g. Cloudflare) says nothing about the
+                    # client registration, and its HTML echoes the request URL, which
+                    # contains "redirect_uri" and would match the keywords below.
+                    if resp.headers.get('cf-mitigated'):
+                        log.debug(
+                            'Skipping OAuth preflight for client %s: bot-protection challenge',
+                            client_info.client_id,
+                        )
+                        return True
                     response_text = await resp.text()
 
                     error = None
